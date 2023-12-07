@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- css -->
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css' integrity='sha512-b2QcS5SsA8tZodcDtGRELiGv5SaKSk1vDHDaQRda0htPYWZ6046lr3kJ5bAAQdpV2mmA/4v0wQF9MyU6/pDIAg==' crossorigin='anonymous'/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <!-- js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <title>Document</title>
+</head>
+<body>
+
+<div id="app" class="container">
+
+    <form @submit.prevent="addTodo()" class="d-flex mt-5">
+        <input  v-model="newTodo" 
+                class="form-control me-2" 
+                type="text" 
+                placeholder="輸入代辦事項..." 
+                aria-label="default input example">
+        <button @click.prevent="addTodo()"
+                type="button" 
+                class="btn btn-primary">
+                submit
+        </button>
+    </form>
+
+
+    <ul class="list-unstyled mt-5">
+        <li v-for="todo in filteredTodos" :key="todo.id"
+            class="row border-bottom py-2">
+
+            <div class="col-1 d-flex justify-content-center  align-items-center">
+                <input type="checkbox" v-model="todo.done">
+            </div>
+
+            <div class="col-9  d-flex justify-content-between  align-items-center">
+                
+                <div class="d-flex">
+
+                    <div v-if="cacheTodo === todo.id">
+                        <form class="d-flex align-items-center">
+                            <input  v-model="cacheTodoText"
+                                    :placeholder="todo.text" 
+                                    @keyup.enter="editTodoDone(todo)"
+                                    class="form-control me-2 " 
+                                    type="text" 
+                                    aria-label="default input example">
+    
+                            <span   @click="editTodoDone(todo)"
+                                    class="material-symbols-rounded">
+                                task_alt
+                            </span>
+                        </form>
+                    </div>
+
+                    <div v-else>
+                        <p  :class="{ 'text-decoration-line-through': todo.done }"
+                            class="mb-0 py-2 ">
+                            {{todo.text}}
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-2  d-flex align-items-center">
+                <span   @click="editTodo(todo)"
+                        class="material-symbols-rounded px-2">edit</span>
+
+                <span   @click="removeTodo(todo)"
+                        class="material-symbols-rounded px-2"> cancel </span>
+            </div>
+
+        </li>
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center ">
+        <P>目前有 {{ filteredTodos.length }} 筆代辦事項</P>
+
+        <ul  class="list-unstyled d-flex">
+            <li class="me-3">
+                <button  @click="filter = 'all'"
+                        type="button" class="btn btn-outline-dark">All</button>
+            </li>
+            <li class="me-3">
+                <button  @click="filter = 'active'"
+                        type="button" class="btn btn-outline-secondary">
+                        Not Yet
+                </button>
+            </li>
+            <li class="me-3">
+                <button @click="filter = 'completed'"
+                        type="button" class="btn btn-outline-success">
+                        Done
+                </button>
+            </li>
+            <li class="me-3">
+                <button @click="DelAll"
+                        type="button" class="btn btn-outline-danger">DEL All</button>
+            </li>
+        </ul>
+    </div>
+
+
+</div>
+
+<style>
+    .material-symbols-rounded {
+      font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24
+    }
+</style>
+    
+<script type="module">
+    const { createApp, ref, reactive, computed } = Vue;
+
+    createApp({
+        setup() {
+            let id = 0;
+            const filter = ref('all');
+            const newTodo = ref();
+            const todos = ref([
+                {   id: id++,
+                    text: '這是一個範例代辦',
+                    done: false
+                },
+            ]);
+
+            const cacheTodo = ref('');
+            const cacheTodoText = ref('');
+
+            const filteredTodos = Vue.computed(() => {
+                const filterFn =    filter.value === 'active' ? (item) => !item.done : 
+                                    filter.value === 'completed' ? (item) => item.done :
+                                    (item) => true;
+                return todos.value.filter(filterFn)
+                })
+
+
+            const addTodo = ()=> {
+                todos.value.push( { id: id++ , text: newTodo.value , done: false})
+                newTodo.value ='';
+            };
+
+            const removeTodo = (todo)=> {
+                todos.value = todos.value.filter((t) => t !== todo );
+            };
+
+            const editTodo = (todo)=> {
+                cacheTodo.value = todo.id;
+                cacheTodoText.value = todo.text;
+            };
+
+            const editTodoDone = (todo)=> {
+                todo.text = cacheTodoText.value;
+                cacheTodo.value = '';
+                cacheTodoText.value = '';
+            };
+
+            const DelAll = ()=> {
+                console.log('a');
+                todos.value =[];
+            };
+
+            return {
+                newTodo,
+                todos,
+                cacheTodo , 
+                cacheTodoText,
+                filter,
+                filteredTodos,
+                addTodo,
+                removeTodo,
+                editTodo,
+                editTodoDone,
+                DelAll
+            }
+        },
+    }).mount('#app');
+</script>
+
+</body>
+</html>
